@@ -28,6 +28,24 @@ This plugin adds a new Elementor widget that enables you to:
 7. Select the Elementor template you created for displaying the posts
 8. Save and publish your page
 
+## Translations
+
+Elementor Fetch Remote Posts is translation-ready. Here's how you can contribute a translation:
+
+1. Download [Poedit](https://poedit.net/), a free software for creating and editing translations.
+2. Open the `elementor-fetch-remote-posts.pot` file from the `languages` folder in Poedit.
+3. Create a new translation and start translating the strings.
+4. Save your translation file in the `languages` folder with the naming convention `elementor-fetch-remote-posts-{LOCALE}.po` (for example, `elementor-fetch-remote-posts-fr_FR.po` for French).
+5. Poedit will automatically generate the corresponding .mo file.
+
+If you create a translation, please consider sharing it with the community by submitting a pull request or contacting the plugin author.
+
+Currently available translations:
+- English (default)
+- [Add your translations here as they become available]
+
+We appreciate any contribution to translate the plugin into more languages!
+
 ## Frequently Asked Questions
 
 **Q: Does this plugin work with any WordPress site?**
@@ -38,8 +56,9 @@ A: The posts are fetched every time the page is loaded. A daily cleanup is sched
 
 ## Changelog
 
-### 1.0.0
+### 1.0.1
 * Initial release
+* Translation ready
 
 ## License
 
