@@ -9,7 +9,6 @@ if (!class_exists('\Elementor\Widget_Base')) {
 
 class EFRP_Widget extends \Elementor\Widget_Base
 {
-
     public function get_name()
     {
         return 'efrp_widget';
@@ -89,10 +88,280 @@ class EFRP_Widget extends \Elementor\Widget_Base
         $this->end_controls_section();
 
         $this->start_controls_section(
+            'layout_section',
+            [
+                'label' => __('Layout', 'elementor-fetch-remote-posts'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_control(
+            'layout',
+            [
+                'label' => __('Layout', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'list',
+                'options' => [
+                    'list' => __('List', 'elementor-fetch-remote-posts'),
+                    'grid' => __('Grid', 'elementor-fetch-remote-posts'),
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'columns',
+            [
+                'label' => __('Columns', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => '3',
+                'options' => [
+                    '1' => '1',
+                    '2' => '2',
+                    '3' => '3',
+                    '4' => '4',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-grid' => 'grid-template-columns: repeat({{VALUE}}, 1fr);',
+                ],
+                'condition' => [
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'column_gap',
+            [
+                'label' => __('Column Gap', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-grid' => 'column-gap: {{SIZE}}{{UNIT}};',
+                ],
+                'condition' => [
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'row_gap',
+            [
+                'label' => __('Row Gap', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-grid' => 'row-gap: {{SIZE}}{{UNIT}};',
+                ],
+                'condition' => [
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+
+        $this->start_controls_section(
             'style_section',
             [
                 'label' => __('Style', 'elementor-fetch-remote-posts'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        
+        // BOX STYLE
+        $this->add_control(
+            'box_heading',
+            [
+                'label' => __('Box Style', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name' => 'post_background',
+                'label' => __('Post Background', 'elementor-fetch-remote-posts'),
+                'types' => ['classic', 'gradient'],
+                'selector' => '{{WRAPPER}} .efrp-post',
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'post_border',
+                'label' => __('Border', 'elementor-fetch-remote-posts'),
+                'selector' => '{{WRAPPER}} .efrp-post',
+            ]
+        );
+
+        $this->add_control(
+            'post_border_radius',
+            [
+                'label' => __('Border Radius', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+
+        $this->add_responsive_control(
+            'post_padding',
+            [
+                'label' => __('Padding', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'post_margin',
+            [
+                'label' => __('Margin', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'grid_layout_style',
+            [
+                'label' => __('Grid Layout', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HIDDEN,
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-grid' => 'display: grid;',
+                ],
+                'condition' => [
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+
+
+
+
+        // IMAGE STYLE
+        $this->add_control(
+            'image_heading',
+            [
+                'label' => __('Image', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_responsive_control(
+            'image_padding',
+            [
+                'label' => __('Image Padding', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-image' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'image_margin',
+            [
+                'label' => __('Image Margin', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-image' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name' => 'image_border',
+                'label' => __('Image Border', 'elementor-fetch-remote-posts'),
+                'selector' => '{{WRAPPER}} .efrp-post-image img',
+            ]
+        );
+
+        $this->add_control(
+            'image_border_radius',
+            [
+                'label' => __('Image Border Radius', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-image img' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        // CONTENT BOX
+        $this->add_control(
+            'contentbox_heading',
+            [
+                'label' => __('Content Box', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_responsive_control(
+            'content_padding',
+            [
+                'label' => __('Content Padding', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-content' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'content_margin',
+            [
+                'label' => __('Content Margin', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-content' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+
+        // TITLE STYLE
+        $this->add_control(
+            'title_heading',
+            [
+                'label' => __('Title', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
             ]
         );
 
@@ -111,8 +380,28 @@ class EFRP_Widget extends \Elementor\Widget_Base
                 'label' => __('Title Color', 'elementor-fetch-remote-posts'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .efrp-post-title' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .efrp-post-title a' => 'color: {{VALUE}};',
                 ],
+            ]
+        );
+
+        $this->add_control(
+            'title_hover_color',
+            [
+                'label' => __('Title Hover Color', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-title a:hover' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'excerpt_heading',
+            [
+                'label' => __('Excerpt', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HEADING,
+                'separator' => 'before',
             ]
         );
 
@@ -147,6 +436,7 @@ class EFRP_Widget extends \Elementor\Widget_Base
         $post_count = $settings['post_count'];
         $category = $settings['category'];
         $excerpt_length = $settings['excerpt_length'];
+        $layout = $settings['layout'];
 
         if (empty($site_url)) {
             echo __('Please enter a valid remote site URL.', 'elementor-fetch-remote-posts');
@@ -165,7 +455,13 @@ class EFRP_Widget extends \Elementor\Widget_Base
             return;
         }
 
-        echo '<div class="efrp-posts-list">';
+        $wrapper_class = 'efrp-posts-list';
+        if ($layout === 'grid') {
+            $wrapper_class .= ' efrp-grid';
+        }
+
+
+        echo '<div class="' . esc_attr($wrapper_class) . '">';
         foreach ($posts as $post) {
             $title = $post['title']['rendered'];
             $excerpt = wp_trim_words(wp_strip_all_tags($post['excerpt']['rendered']), $excerpt_length);
@@ -176,11 +472,13 @@ class EFRP_Widget extends \Elementor\Widget_Base
 
             echo '<div class="efrp-post">';
             if ($image_url) {
-                echo '<div class="efrp-post-image"><img src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '"></div>';
+                echo '<div class="efrp-post-image"><a href="' . esc_url($link) . '"><img decoding="async" src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '"></a></div>';
             }
+            echo '<div class="efrp-post-content">';
             echo '<h3 class="efrp-post-title"><a href="' . esc_url($link) . '">' . esc_html($title) . '</a></h3>';
             echo '<div class="efrp-post-excerpt">' . esc_html($excerpt) . '</div>';
-            echo '</div>';
+            echo '</div>'; // Close efrp-post-content
+            echo '</div>'; // Close efrp-post
         }
         echo '</div>';
     }
