@@ -274,9 +274,81 @@ class EFRP_Widget extends \Elementor\Widget_Base
         $this->add_control(
             'image_heading',
             [
-                'label' => __('Image', 'elementor-fetch-remote-posts'),
+                'label' => __('Image Settings', 'elementor-fetch-remote-posts'),
                 'type' => \Elementor\Controls_Manager::HEADING,
                 'separator' => 'before',
+            ]
+        );
+
+        $this->add_responsive_control(
+            'image_width',
+            [
+                'label' => __('Image Width', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1000,
+                        'step' => 1,
+                    ],
+                    '%' => [
+                        'min' => 0,
+                        'max' => 100,
+                    ],
+                ],
+                'default' => [
+                    'unit' => '%',
+                    'size' => 100,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-image img' => 'width: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'image_height',
+            [
+                'label' => __('Image Height', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 1000,
+                        'step' => 1,
+                    ],
+                    'em' => [
+                        'min' => 0,
+                        'max' => 50,
+                    ],
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 200,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-image img' => 'height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'image_object_fit',
+            [
+                'label' => __('Object Fit', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'default' => 'cover',
+                'options' => [
+                    'cover' => __('Cover', 'elementor-fetch-remote-posts'),
+                    'contain' => __('Contain', 'elementor-fetch-remote-posts'),
+                    'fill' => __('Fill', 'elementor-fetch-remote-posts'),
+                    'none' => __('None', 'elementor-fetch-remote-posts'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-post-image img' => 'object-fit: {{VALUE}};',
+                ],
             ]
         );
 
