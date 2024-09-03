@@ -108,6 +108,22 @@ class EFRP_Widget extends \Elementor\Widget_Base
             ]
         );
 
+        $this->add_control(
+            'grid_layout_style',
+            [
+                'label' => __('Grid Layout', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::HIDDEN,
+                'default' => 'yes',
+                'selectors' => [
+                    '{{WRAPPER}} .efrp-grid' => 'display: grid;',
+                ],
+                'condition' => [
+                    'layout' => 'grid',
+                ],
+            ]
+        );
+
+
         $this->add_responsive_control(
             'columns',
             [
@@ -128,6 +144,8 @@ class EFRP_Widget extends \Elementor\Widget_Base
                 ],
             ]
         );
+
+ 
 
         $this->add_responsive_control(
             'column_gap',
@@ -248,19 +266,6 @@ class EFRP_Widget extends \Elementor\Widget_Base
             ]
         );
 
-        $this->add_control(
-            'grid_layout_style',
-            [
-                'label' => __('Grid Layout', 'elementor-fetch-remote-posts'),
-                'type' => \Elementor\Controls_Manager::HIDDEN,
-                'selectors' => [
-                    '{{WRAPPER}} .efrp-grid' => 'display: grid;',
-                ],
-                'condition' => [
-                    'layout' => 'grid',
-                ],
-            ]
-        );
 
 
 
