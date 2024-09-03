@@ -672,43 +672,50 @@ class EFRP_Widget extends \Elementor\Widget_Base
     {
         $transient_key = 'efrp_remote_posts_' . md5($site_url . $post_count . $category);
 
-        // Try to get cached data
-        $posts = get_transient($transient_key);
+        // Always check the transient, even if cache_time is 0
+        $cached_data = get_transient($transient_key);
 
-        if (false === $posts) {
-            // Cache is expired or doesn't exist, fetch new data
-            $api_url = trailingslashit($site_url) . 'wp-json/wp/v2/posts?_embed&per_page=' . intval($post_count);
-
-            if (!empty($category)) {
-                $category_api_url = trailingslashit($site_url) . 'wp-json/wp/v2/categories?slug=' . urlencode($category);
-                $category_response = wp_remote_get($category_api_url);
-
-                if (is_wp_error($category_response)) {
-                    return new WP_Error('fetch_error', __('Error fetching category information.', 'elementor-fetch-remote-posts'));
-                }
-
-                $categories = json_decode(wp_remote_retrieve_body($category_response), true);
-                if (!empty($categories) && isset($categories[0]['id'])) {
-                    $category_id = $categories[0]['id'];
-                    $api_url .= '&categories=' . $category_id;
-                }
+        // If we have cached data and the cache hasn't expired, use it
+        if (false !== $cached_data && $cache_time > 0) {
+            $cached_time = get_option('_transient_timeout_' . $transient_key) - time();
+            if ($cached_time > 0) {
+                return $cached_data;
             }
-
-            $response = wp_remote_get($api_url);
-
-            if (is_wp_error($response)) {
-                return new WP_Error('fetch_error', __('Error fetching posts from remote site.', 'elementor-fetch-remote-posts'));
-            }
-
-            $posts = json_decode(wp_remote_retrieve_body($response), true);
-
-            if (empty($posts)) {
-                return new WP_Error('no_posts', __('No posts found on the remote site.', 'elementor-fetch-remote-posts'));
-            }
-
-            // Cache the fetched data
-            set_transient($transient_key, $posts, $cache_time);
         }
+
+        // Cache is expired, doesn't exist, or real-time fetching is enabled
+        $api_url = trailingslashit($site_url) . 'wp-json/wp/v2/posts?_embed&per_page=' . intval($post_count);
+
+        if (!empty($category)) {
+            $category_api_url = trailingslashit($site_url) . 'wp-json/wp/v2/categories?slug=' . urlencode($category);
+            $category_response = wp_remote_get($category_api_url);
+
+            if (is_wp_error($category_response)) {
+                return new WP_Error('fetch_error', __('Error fetching category information.', 'elementor-fetch-remote-posts'));
+            }
+
+            $categories = json_decode(wp_remote_retrieve_body($category_response), true);
+            if (!empty($categories) && isset($categories[0]['id'])) {
+                $category_id = $categories[0]['id'];
+                $api_url .= '&categories=' . $category_id;
+            }
+        }
+
+        $response = wp_remote_get($api_url);
+
+        if (is_wp_error($response)) {
+            return new WP_Error('fetch_error', __('Error fetching posts from remote site.', 'elementor-fetch-remote-posts'));
+        }
+
+        $posts = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (empty($posts)) {
+            return new WP_Error('no_posts', __('No posts found on the remote site.', 'elementor-fetch-remote-posts'));
+        }
+
+        // Always cache the fetched data, even if cache_time is 0
+        // This allows us to check if the data has changed on subsequent requests
+        set_transient($transient_key, $posts, max(1, $cache_time)); // Minimum 1 second cache
 
         return $posts;
     }

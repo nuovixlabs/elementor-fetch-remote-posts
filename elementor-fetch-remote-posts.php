@@ -3,7 +3,7 @@
  * Plugin Name: Elementor Fetch Remote Posts
  * Plugin URI: https://github.com/yourusername/elementor-fetch-remote-posts
  * Description: Fetches and displays posts from external WordPress sites using Elementor templates
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Rakesh Mandal
  * Author URI: https://rakeshmandal.com
  * License: GPL-2.0+
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-define('EFRP_VERSION', '1.0.1');
+define('EFRP_VERSION', '1.0.2');
 define('EFRP_FILE', __FILE__);
 define('EFRP_PATH', plugin_dir_path(EFRP_FILE));
 define('EFRP_URL', plugin_dir_url(EFRP_FILE));
@@ -136,3 +136,12 @@ function efrp_init()
     }
 }
 add_action('plugins_loaded', 'efrp_init');
+
+function efrp_clear_transients()
+{
+    global $wpdb;
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_efrp_remote_posts_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_efrp_remote_posts_%'");
+}
+
+register_activation_hook(__FILE__, 'efrp_clear_transients');
