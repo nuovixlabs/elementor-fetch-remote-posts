@@ -74,9 +74,21 @@ class EFRP_Widget extends \Elementor\Widget_Base
         );
 
         $this->add_control(
+            'title_length',
+            [
+                'label' => __('Title Length (words)', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'min' => 1,
+                'max' => 20,
+                'step' => 1,
+                'default' => 10,
+            ]
+        );
+
+        $this->add_control(
             'excerpt_length',
             [
-                'label' => __('Excerpt Length', 'elementor-fetch-remote-posts'),
+                'label' => __('Excerpt Length (words)', 'elementor-fetch-remote-posts'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'min' => 10,
                 'max' => 200,
@@ -540,7 +552,7 @@ class EFRP_Widget extends \Elementor\Widget_Base
 
         echo '<div class="' . esc_attr($wrapper_class) . '">';
         foreach ($posts as $post) {
-            $title = $post['title']['rendered'];
+            $title = wp_trim_words(wp_strip_all_tags($post['title']['rendered']), $settings['title_length']);
             $excerpt = wp_trim_words(wp_strip_all_tags($post['excerpt']['rendered']), $excerpt_length);
             $link = $post['link'];
             $image_url = isset($post['_embedded']['wp:featuredmedia'][0]['source_url'])
