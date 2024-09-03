@@ -95,6 +95,112 @@ function efrp_check_elementor()
     return true;
 }
 
+
+function efrp_enqueue_scripts()
+{
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('efrp-script', EFRP_URL . 'assets/js/efrp-script.js', ['jquery'], EFRP_VERSION, true);
+    wp_localize_script('efrp-script', 'efrp_ajax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('efrp_nonce')
+    ]);
+}
+add_action('wp_enqueue_scripts', 'efrp_enqueue_scripts');
+
+
+// FETCH
+function fetch_remote_posts($site_url, $post_count, $category, $cache_time = 300)
+{
+    $transient_key = 'efrp_remote_posts_' . md5($site_url . $post_count . $category);
+
+    // Always check the transient, even if cache_time is 0
+    $cached_data = get_transient($transient_key);
+
+    // If we have cached data and the cache hasn't expired, use it
+    if (false !== $cached_data && $cache_time > 0) {
+        $cached_time = get_option('_transient_timeout_' . $transient_key) - time();
+        if ($cached_time > 0) {
+            return $cached_data;
+        }
+    }
+
+    // Cache is expired, doesn't exist, or real-time fetching is enabled
+    $api_url = trailingslashit($site_url) . 'wp-json/wp/v2/posts?_embed&per_page=' . intval($post_count);
+
+    if (!empty($category)) {
+        $category_api_url = trailingslashit($site_url) . 'wp-json/wp/v2/categories?slug=' . urlencode($category);
+        $category_response = wp_remote_get($category_api_url);
+
+        if (is_wp_error($category_response)) {
+            return new WP_Error('fetch_error', __('Error fetching category information.', 'elementor-fetch-remote-posts'));
+        }
+
+        $categories = json_decode(wp_remote_retrieve_body($category_response), true);
+        if (!empty($categories) && isset($categories[0]['id'])) {
+            $category_id = $categories[0]['id'];
+            $api_url .= '&categories=' . $category_id;
+        }
+    }
+
+    $response = wp_remote_get($api_url);
+
+    if (is_wp_error($response)) {
+        return new WP_Error('fetch_error', __('Error fetching posts from remote site.', 'elementor-fetch-remote-posts'));
+    }
+
+    $posts = json_decode(wp_remote_retrieve_body($response), true);
+
+    if (empty($posts)) {
+        return new WP_Error('no_posts', __('No posts found on the remote site.', 'elementor-fetch-remote-posts'));
+    }
+
+    // Always cache the fetched data, even if cache_time is 0
+    // This allows us to check if the data has changed on subsequent requests
+    set_transient($transient_key, $posts, max(1, $cache_time)); // Minimum 1 second cache
+
+    return $posts;
+}
+
+function efrp_ajax_fetch_posts()
+{
+    try {
+        check_ajax_referer('efrp_nonce', 'nonce');
+
+        if (!isset($_POST['settings'])) {
+            throw new Exception('Invalid request: settings not provided');
+        }
+
+        $settings = json_decode(stripslashes($_POST['settings']), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Invalid JSON in settings: ' . json_last_error_msg());
+        }
+
+        if (!isset($settings['site_url']) || !isset($settings['site_url']['url'])) {
+            throw new Exception('Invalid settings: site_url not provided');
+        }
+
+        $site_url = $settings['site_url']['url'];
+        $post_count = isset($settings['post_count']) ? intval($settings['post_count']) : 4;
+        $category = isset($settings['category']) ? $settings['category'] : '';
+        $cache_time = isset($settings['cache_time']) ? intval($settings['cache_time']) : 300;
+
+        // Use the fetch_remote_posts function
+        $posts = fetch_remote_posts($site_url, $post_count, $category, $cache_time);
+
+        if (is_wp_error($posts)) {
+            throw new Exception($posts->get_error_message());
+        }
+
+        wp_send_json_success($posts);
+    } catch (Exception $e) {
+        error_log('EFRP Error: ' . $e->getMessage());
+        wp_send_json_error('An error occurred: ' . $e->getMessage());
+    }
+}
+add_action('wp_ajax_efrp_fetch_posts', 'efrp_ajax_fetch_posts');
+add_action('wp_ajax_nopriv_efrp_fetch_posts', 'efrp_ajax_fetch_posts');
+
+
 // Admin notice if Elementor is not active
 function efrp_fail_load()
 {

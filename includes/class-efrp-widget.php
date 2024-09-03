@@ -29,6 +29,11 @@ class EFRP_Widget extends \Elementor\Widget_Base
         return ['general'];
     }
 
+    // public function get_script_depends()
+    // {
+    //     return ['jquery', 'efrp-script'];
+    // }
+
     protected function register_controls()
     {
         $this->start_controls_section(
@@ -558,78 +563,90 @@ class EFRP_Widget extends \Elementor\Widget_Base
     protected function render()
     {
         $settings = $this->get_settings_for_display();
+        $widget_id = $this->get_id();
 
-        $site_url = $settings['site_url']['url'];
-        $post_count = $settings['post_count'];
-        $category = $settings['category'];
-        $excerpt_length = $settings['excerpt_length'];
-        $layout = $settings['layout'];
-        $cache_time = $settings['cache_time'];
+        // Ensure the settings are properly JSON encoded
+        $settings_json = wp_json_encode($settings);
 
-        if (empty($site_url)) {
-            echo __('Please enter a valid remote site URL.', 'elementor-fetch-remote-posts');
-            return;
-        }
-
-        // $posts = $this->fetch_remote_posts($site_url, $post_count, $category);
-        $posts = $this->fetch_remote_posts($site_url, $post_count, $category, $cache_time);
-
-        if (is_wp_error($posts)) {
-            echo $posts->get_error_message();
-            return;
-        }
-
-        if (empty($posts)) {
-            echo __('No posts found.', 'elementor-fetch-remote-posts');
-            return;
-        }
-
-        $wrapper_class = 'efrp-posts-list';
-        if ($layout === 'grid') {
-            $wrapper_class .= ' efrp-grid';
-        }
-
-
-        echo '<div class="' . esc_attr($wrapper_class) . '">';
-        foreach ($posts as $post) {
-            $title = wp_trim_words(wp_strip_all_tags($post['title']['rendered']), $settings['title_length']);
-            // $excerpt = wp_trim_words(wp_strip_all_tags($post['excerpt']['rendered']), $excerpt_length);
-
-
-
-            // Determine the excerpt source
-            if (!empty($post['excerpt']['rendered'])) {
-                $excerpt_text = wp_strip_all_tags($post['excerpt']['rendered']);
-            } else {
-                $excerpt_text = wp_strip_all_tags($post['content']['rendered']);
-            }
-
-            // Apply content filtering if enabled
-            // if ($settings['filter_content'] === 'yes') {
-            //     $excerpt_text = preg_replace('/Article Originally Published Here.*$/is', '', $excerpt_text);
-            //     $excerpt_text = trim($excerpt_text);
-            // }
-
-            // Trim the excerpt to the specified length
-            $excerpt = wp_trim_words($excerpt_text, $settings['excerpt_length']);
-
-            $link = $post['link'];
-            $image_url = isset($post['_embedded']['wp:featuredmedia'][0]['source_url'])
-                ? $post['_embedded']['wp:featuredmedia'][0]['source_url']
-                : '';
-
-            echo '<div class="efrp-post">';
-            if ($image_url) {
-                echo '<div class="efrp-post-image"><a href="' . esc_url($link) . '"><img decoding="async" src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '"></a></div>';
-            }
-            echo '<div class="efrp-post-content">';
-            echo '<h3 class="efrp-post-title"><a href="' . esc_url($link) . '">' . esc_html($title) . '</a></h3>';
-            echo '<div class="efrp-post-excerpt">' . esc_html($excerpt) . '</div>';
-            echo '</div>'; // Close efrp-post-content
-            echo '</div>'; // Close efrp-post
-        }
-        echo '</div>';
+        echo '<div id="efrp-container-' . esc_attr($widget_id) . '" class="efrp-container" data-settings="' . esc_attr($settings_json) . '"></div>';
     }
+
+
+    // protected function render()
+    // {
+    //     $settings = $this->get_settings_for_display();
+
+    //     $site_url = $settings['site_url']['url'];
+    //     $post_count = $settings['post_count'];
+    //     $category = $settings['category'];
+    //     $excerpt_length = $settings['excerpt_length'];
+    //     $layout = $settings['layout'];
+    //     $cache_time = $settings['cache_time'];
+
+    //     if (empty($site_url)) {
+    //         echo __('Please enter a valid remote site URL.', 'elementor-fetch-remote-posts');
+    //         return;
+    //     }
+
+    //     // $posts = $this->fetch_remote_posts($site_url, $post_count, $category);
+    //     $posts = $this->fetch_remote_posts($site_url, $post_count, $category, $cache_time);
+
+    //     if (is_wp_error($posts)) {
+    //         echo $posts->get_error_message();
+    //         return;
+    //     }
+
+    //     if (empty($posts)) {
+    //         echo __('No posts found.', 'elementor-fetch-remote-posts');
+    //         return;
+    //     }
+
+    //     $wrapper_class = 'efrp-posts-list';
+    //     if ($layout === 'grid') {
+    //         $wrapper_class .= ' efrp-grid';
+    //     }
+
+
+    //     echo '<div class="' . esc_attr($wrapper_class) . '">';
+    //     foreach ($posts as $post) {
+    //         $title = wp_trim_words(wp_strip_all_tags($post['title']['rendered']), $settings['title_length']);
+    //         // $excerpt = wp_trim_words(wp_strip_all_tags($post['excerpt']['rendered']), $excerpt_length);
+
+
+
+    //         // Determine the excerpt source
+    //         if (!empty($post['excerpt']['rendered'])) {
+    //             $excerpt_text = wp_strip_all_tags($post['excerpt']['rendered']);
+    //         } else {
+    //             $excerpt_text = wp_strip_all_tags($post['content']['rendered']);
+    //         }
+
+    //         // Apply content filtering if enabled
+    //         // if ($settings['filter_content'] === 'yes') {
+    //         //     $excerpt_text = preg_replace('/Article Originally Published Here.*$/is', '', $excerpt_text);
+    //         //     $excerpt_text = trim($excerpt_text);
+    //         // }
+
+    //         // Trim the excerpt to the specified length
+    //         $excerpt = wp_trim_words($excerpt_text, $settings['excerpt_length']);
+
+    //         $link = $post['link'];
+    //         $image_url = isset($post['_embedded']['wp:featuredmedia'][0]['source_url'])
+    //             ? $post['_embedded']['wp:featuredmedia'][0]['source_url']
+    //             : '';
+
+    //         echo '<div class="efrp-post">';
+    //         if ($image_url) {
+    //             echo '<div class="efrp-post-image"><a href="' . esc_url($link) . '"><img decoding="async" src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '"></a></div>';
+    //         }
+    //         echo '<div class="efrp-post-content">';
+    //         echo '<h3 class="efrp-post-title"><a href="' . esc_url($link) . '">' . esc_html($title) . '</a></h3>';
+    //         echo '<div class="efrp-post-excerpt">' . esc_html($excerpt) . '</div>';
+    //         echo '</div>'; // Close efrp-post-content
+    //         echo '</div>'; // Close efrp-post
+    //     }
+    //     echo '</div>';
+    // }
 
     // OLDER METHOD OF CALLING THE API
     // private function fetch_remote_posts($site_url, $post_count, $category)
