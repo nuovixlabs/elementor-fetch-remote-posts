@@ -216,6 +216,31 @@ class EFRP_Widget extends \Elementor\Widget_Base
 
         $this->end_controls_section();
 
+
+        $this->start_controls_section(
+            'cache_optimizations_section',
+            [
+                'label' => __('Optimizations', 'elementor-fetch-remote-posts'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_control(
+            'cache_time',
+            [
+                'label' => __('Cache Time (seconds)', 'elementor-fetch-remote-posts'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'min' => 0,
+                'max' => 86400, // 24 hours
+                'step' => 60,
+                'default' => 300,
+                'description' => __('Set to 0 for real-time fetching (may impact performance)', 'elementor-fetch-remote-posts'),
+            ]
+        );
+
+        $this->end_controls_section();
+
+
         $this->start_controls_section(
             'style_section',
             [
@@ -539,13 +564,15 @@ class EFRP_Widget extends \Elementor\Widget_Base
         $category = $settings['category'];
         $excerpt_length = $settings['excerpt_length'];
         $layout = $settings['layout'];
+        $cache_time = $settings['cache_time'];
 
         if (empty($site_url)) {
             echo __('Please enter a valid remote site URL.', 'elementor-fetch-remote-posts');
             return;
         }
 
-        $posts = $this->fetch_remote_posts($site_url, $post_count, $category);
+        // $posts = $this->fetch_remote_posts($site_url, $post_count, $category);
+        $posts = $this->fetch_remote_posts($site_url, $post_count, $category, $cache_time);
 
         if (is_wp_error($posts)) {
             echo $posts->get_error_message();
@@ -604,35 +631,83 @@ class EFRP_Widget extends \Elementor\Widget_Base
         echo '</div>';
     }
 
-    private function fetch_remote_posts($site_url, $post_count, $category)
+    // OLDER METHOD OF CALLING THE API
+    // private function fetch_remote_posts($site_url, $post_count, $category)
+    // {
+    //     $api_url = trailingslashit($site_url) . 'wp-json/wp/v2/posts?_embed&per_page=' . intval($post_count);
+
+    //     if (!empty($category)) {
+    //         $category_api_url = trailingslashit($site_url) . 'wp-json/wp/v2/categories?slug=' . urlencode($category);
+    //         $category_response = wp_remote_get($category_api_url);
+
+    //         if (is_wp_error($category_response)) {
+    //             return new WP_Error('fetch_error', __('Error fetching category information.', 'elementor-fetch-remote-posts'));
+    //         }
+
+    //         $categories = json_decode(wp_remote_retrieve_body($category_response), true);
+    //         if (!empty($categories) && isset($categories[0]['id'])) {
+    //             $category_id = $categories[0]['id'];
+    //             $api_url .= '&categories=' . $category_id;
+    //         }
+    //     }
+
+    //     $response = wp_remote_get($api_url);
+
+    //     if (is_wp_error($response)) {
+    //         return new WP_Error('fetch_error', __('Error fetching posts from remote site.', 'elementor-fetch-remote-posts'));
+    //     }
+
+    //     $posts = json_decode(wp_remote_retrieve_body($response), true);
+
+    //     if (empty($posts)) {
+    //         return new WP_Error('no_posts', __('No posts found on the remote site.', 'elementor-fetch-remote-posts'));
+    //     }
+
+    //     return $posts;
+    // }
+
+
+
+    private function fetch_remote_posts($site_url, $post_count, $category, $cache_time = 300)
     {
-        $api_url = trailingslashit($site_url) . 'wp-json/wp/v2/posts?_embed&per_page=' . intval($post_count);
+        $transient_key = 'efrp_remote_posts_' . md5($site_url . $post_count . $category);
 
-        if (!empty($category)) {
-            $category_api_url = trailingslashit($site_url) . 'wp-json/wp/v2/categories?slug=' . urlencode($category);
-            $category_response = wp_remote_get($category_api_url);
+        // Try to get cached data
+        $posts = get_transient($transient_key);
 
-            if (is_wp_error($category_response)) {
-                return new WP_Error('fetch_error', __('Error fetching category information.', 'elementor-fetch-remote-posts'));
+        if (false === $posts) {
+            // Cache is expired or doesn't exist, fetch new data
+            $api_url = trailingslashit($site_url) . 'wp-json/wp/v2/posts?_embed&per_page=' . intval($post_count);
+
+            if (!empty($category)) {
+                $category_api_url = trailingslashit($site_url) . 'wp-json/wp/v2/categories?slug=' . urlencode($category);
+                $category_response = wp_remote_get($category_api_url);
+
+                if (is_wp_error($category_response)) {
+                    return new WP_Error('fetch_error', __('Error fetching category information.', 'elementor-fetch-remote-posts'));
+                }
+
+                $categories = json_decode(wp_remote_retrieve_body($category_response), true);
+                if (!empty($categories) && isset($categories[0]['id'])) {
+                    $category_id = $categories[0]['id'];
+                    $api_url .= '&categories=' . $category_id;
+                }
             }
 
-            $categories = json_decode(wp_remote_retrieve_body($category_response), true);
-            if (!empty($categories) && isset($categories[0]['id'])) {
-                $category_id = $categories[0]['id'];
-                $api_url .= '&categories=' . $category_id;
+            $response = wp_remote_get($api_url);
+
+            if (is_wp_error($response)) {
+                return new WP_Error('fetch_error', __('Error fetching posts from remote site.', 'elementor-fetch-remote-posts'));
             }
-        }
 
-        $response = wp_remote_get($api_url);
+            $posts = json_decode(wp_remote_retrieve_body($response), true);
 
-        if (is_wp_error($response)) {
-            return new WP_Error('fetch_error', __('Error fetching posts from remote site.', 'elementor-fetch-remote-posts'));
-        }
+            if (empty($posts)) {
+                return new WP_Error('no_posts', __('No posts found on the remote site.', 'elementor-fetch-remote-posts'));
+            }
 
-        $posts = json_decode(wp_remote_retrieve_body($response), true);
-
-        if (empty($posts)) {
-            return new WP_Error('no_posts', __('No posts found on the remote site.', 'elementor-fetch-remote-posts'));
+            // Cache the fetched data
+            set_transient($transient_key, $posts, $cache_time);
         }
 
         return $posts;
