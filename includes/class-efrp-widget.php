@@ -97,6 +97,19 @@ class EFRP_Widget extends \Elementor\Widget_Base
             ]
         );
 
+        // Filter Excerpt with Specific String
+        // $this->add_control(
+        //     'filter_content',
+        //     [
+        //         'label' => __('Filter "Article Originally Published Here"', 'elementor-fetch-remote-posts'),
+        //         'type' => \Elementor\Controls_Manager::SWITCHER,
+        //         'label_on' => __('Yes', 'elementor-fetch-remote-posts'),
+        //         'label_off' => __('No', 'elementor-fetch-remote-posts'),
+        //         'return_value' => 'yes',
+        //         'default' => 'yes',
+        //     ]
+        // );
+
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -553,7 +566,26 @@ class EFRP_Widget extends \Elementor\Widget_Base
         echo '<div class="' . esc_attr($wrapper_class) . '">';
         foreach ($posts as $post) {
             $title = wp_trim_words(wp_strip_all_tags($post['title']['rendered']), $settings['title_length']);
-            $excerpt = wp_trim_words(wp_strip_all_tags($post['excerpt']['rendered']), $excerpt_length);
+            // $excerpt = wp_trim_words(wp_strip_all_tags($post['excerpt']['rendered']), $excerpt_length);
+
+
+
+            // Determine the excerpt source
+            if (!empty($post['excerpt']['rendered'])) {
+                $excerpt_text = wp_strip_all_tags($post['excerpt']['rendered']);
+            } else {
+                $excerpt_text = wp_strip_all_tags($post['content']['rendered']);
+            }
+
+            // Apply content filtering if enabled
+            // if ($settings['filter_content'] === 'yes') {
+            //     $excerpt_text = preg_replace('/Article Originally Published Here.*$/is', '', $excerpt_text);
+            //     $excerpt_text = trim($excerpt_text);
+            // }
+
+            // Trim the excerpt to the specified length
+            $excerpt = wp_trim_words($excerpt_text, $settings['excerpt_length']);
+
             $link = $post['link'];
             $image_url = isset($post['_embedded']['wp:featuredmedia'][0]['source_url'])
                 ? $post['_embedded']['wp:featuredmedia'][0]['source_url']
